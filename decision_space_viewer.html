@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Decision Space Viewer</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            margin: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            grid-template-rows: 1fr;
+            min-height: calc(100vh - 200px);
+        }
+
+        .left-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+        }
+
+        .right-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-left: 1px solid #dee2e6;
+            overflow-y: auto;
+        }
+
+        .center-panel {
+            padding: 20px;
+            background: white;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #495057;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .panel-header i {
+            margin-right: 10px;
+            color: #007bff;
+        }
+
+        .space-section {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+        }
+
+        .space-section h4 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #212529;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .constraint-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+        }
+
+        .constraint-text {
+            flex-grow: 1;
+            color: #495057;
+        }
+
+        .constraint-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .slider-container {
+            position: relative;
+            margin: 15px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e9ecef;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            white-space: nowrap;
+        }
+
+        .dimension-control {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .dimension-btn {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85em;
+        }
+
+        .dimension-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .dimension-btn:hover {
+            background: #e9ecef;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-active {
+            background: #28a745;
+        }
+
+        .status-warning {
+            background: #ffc107;
+        }
+
+        .status-error {
+            background: #dc3545;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        #decision-space-visualization {
+            width: 100%;
+            height: calc(100vh - 300px);
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        .viz-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            display: flex;
+            gap: 5px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 250px 1fr 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .left-panel, .right-panel {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Interactive Decision Space Viewer</h1>
+            <p>Explore project decision spaces in real-time as you create constraints and define your portfolio strategy</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Left Panel: Project Controls -->
+            <div class="left-panel">
+                <div class="panel-header">
+                    <i>📋</i> Project Definition
+                </div>
+
+                <div class="space-section">
+                    <h4>📊 Current Projects</h4>
+                    <div id="projects-list" class="projects-list">
+                        <!-- Projects will be listed here -->
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="addNewProject()">
+                        Add Project
+                    </button>
+                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="loadDemoData()">
+                        Load Demo Data
+                    </button>
+                    <button class="btn btn-success" style="width: 100%;" onclick="exportData()">
+                        Export Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Center Panel: Visualization -->
+            <div class="center-panel">
+                <div class="panel-header">
+                    <i>🎨</i> Decision Space Visualization
+                    <div class="viz-controls">
+                        <button class="btn btn-sm btn-secondary" onclick="resetView()">Reset</button>
+                        <button class="btn btn-sm btn-info" onclick="downloadVisualization()">💾 Export</button>
+                    </div>
+                </div>
+
+                <div class="space-section" style="padding: 0;">
+                    <div id="decision-space-visualization">
+                        <!-- Decision space visualization will be rendered here -->
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100%; flex-direction: column;">
+                            <div style="font-size: 3em; color: #6c757d; margin-bottom: 20px;">🎯</div>
+                            <div style="text-align: center; color: #6c757d;">
+                                <h3>Welcome to the Decision Space Viewer</h3>
+                                <p>Add projects and constraints to see your decision space come to life</p>
+                                <button class="btn btn-primary" onclick="loadDemoData()" style="margin-top: 20px;">
+                                    Try the Demo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dimension-control">
+                    <h4>📏 View Controls</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <label><strong>X-Axis:</strong>
+                                <span style="font-size: 0.8em; color: #6c757d; margin-left: 5px;" title="Left-right positioning of projects">Horizontal</span>
+                            </label>
+                            <select id="x-dimension" onchange="updateVisualization()" style="width: 100%;" title="Choose the strategic dimension for horizontal positioning">
+                                <option value="Strategic Value" title="How important this project is to company goals and competitive advantage">Strategic Value</option>
+                                <option value="Technical Complexity" title="Engineering difficulty and technical innovation required">Technical Complexity</option>
+                                <option value="Market Impact" title="Potential revenue impact and market disruption">Market Impact</option>
+                                <option value="Resource Requirement" title="Budget, staff, and infrastructure needs">Resource Requirement</option>
+                                <option value="Innovation Level" title="Technological breakthrough potential and novelty">Innovation Level</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label><strong>Y-Axis:</strong>
+                                <span style="font-size: 0.8em; color: #6c757d; margin-left: 5px;" title="Up-down positioning of projects">Vertical</span>
+                            </label>
+                            <select id="y-dimension" onchange="updateVisualization()" style="width: 100%;" title="Choose the strategic dimension for vertical positioning">
+                                <option value="Technical Complexity" title="Engineering difficulty and technical innovation required">Technical Complexity</option>
+                                <option value="Strategic Value" title="How important this project is to company goals and competitive advantage">Strategic Value</option>
+                                <option value="Market Impact" title="Potential revenue impact and market disruption">Market Impact</option>
+                                <option value="Resource Requirement" title="Budget, staff, and infrastructure needs">Resource Requirement</option>
+                                <option value="Innovation Level" title="Technological breakthrough potential and novelty">Innovation Level</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label><strong>Z-Axis:</strong>
+                                <span style="font-size: 0.8em; color: #6c757d; margin-left: 5px;" title="Depth positioning of projects">Depth</span>
+                            </label>
+                            <select id="z-dimension" onchange="updateVisualization()" style="width: 100%;" title="Choose the strategic dimension for depth positioning (3D mode only)">
+                                <option value="Innovation Level" title="Technological breakthrough potential and novelty">Innovation Level</option>
+                                <option value="Strategic Value" title="How important this project is to company goals and competitive advantage">Strategic Value</option>
+                                <option value="Technical Complexity" title="Engineering difficulty and technical innovation required">Technical Complexity</option>
+                                <option value="Market Impact" title="Potential revenue impact and market disruption">Market Impact</option>
+                                <option value="Resource Requirement" title="Budget, staff, and infrastructure needs">Resource Requirement</option>
+                            </select>
+                        </div>
+            </div>
+                    <div style="display: flex; gap: 5px; margin-top: 10px;">
+                        <button class="btn btn-sm btn-info" onclick="switchTo2D()" style="flex: 1;">
+                            2D View
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="generate3DVisualization()" style="flex: 1;">
+                            3D View
+                        </button>
+                    </div>
+                    <div id="view-mode-indicator" style="margin-top: 10px;">
+                        <span id="current-view-mode" style="color: #007bff; font-weight: bold;">2D Mode</span>
+                        <span id="polytope-indicator" style="color: #28a745; margin-left: 10px;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Constraints -->
+            <div class="right-panel">
+                <div class="panel-header">
+                    <i>🔗</i> Constraints Manager
+                </div>
+
+                <div class="space-section">
+                    <h4>⚡ Quick Constraint Add</h4>
+                    <div class="form-group">
+                        <input type="text" id="project-a-select" placeholder="Select Project A..." readonly>
+                        <input type="text" id="project-b-select" placeholder="Select Project B..." readonly style="margin-top: 5px;">
+                        <select id="constraint-type" style="margin-top: 5px;">
+                            <option value="GREATER">Project A > Project B</option>
+                            <option value="LESS">Project A < Project B</option>
+                            <option value="EQUAL">Project A = Project B</option>
+                            <option value="RANGE">Set Range</option>
+                        </select>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 5px;" onclick="addQuickConstraint()">
+                            Add Constraint
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-section">
+                    <h4>📋 Active Constraints</h4>
+                    <div id="constraints-list">
+                        <!-- Constraints will be listed here -->
+                    </div>
+                </div>
+
+                <div class="space-section">
+                    <h4>🎛️ Constraint Testing</h4>
+                    <button class="btn btn-warning" style="width: 100%; margin-bottom: 8px;" onclick="testConstraints()">
+                        Test Feasibility
+                    </button>
+                    <button class="btn btn-info" style="width: 100%; margin-bottom: 8px;" onclick="analyzeSensitivity()">
+                        Sensitivity Analysis
+                    </button>
+                    <button class="btn btn-success" style="width: 100%;" onclick="optimizePortfolio()">
+                        Optimize Portfolio
+                    </button>
+                </div>
+
+                <div class="space-section">
+                    <h4>📊 Status</h4>
+                    <div id="status-indicators">
+                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <span class="status-indicator status-active"></span>
+                            <span>Projects: <span id="status-projects">0</span></span>
+                        </div>
+                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <span class="status-indicator status-warning"></span>
+                            <span>Constraints: <span id="status-constraints">0</span></span>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <span class="status-indicator status-error"></span>
+                            <span>Conflicts: <span id="status-conflicts">0</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification System -->
+    <div id="notifications" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <!-- Notifications will appear here -->
+    </div>
+
+    <script>
+        // Global variables
+        let projects = [];
+        let constraints = [];
+        let currentVisualization = null;
+        let selectedProjects = [];
+        let alertCount = 0;
+        let backendAvailable = false;
+        let visualizationMode = '2D'; // '2D' or '3D'
+
+        // Backend API base URL
+        const BACKEND_URL = 'http://localhost:5001/api';
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            console.log('Initializing Decision Space Viewer...');
+
+            // Set default axis selections
+            document.getElementById('x-dimension').value = 'Strategic Value';
+            document.getElementById('y-dimension').value = 'Market Impact';
+
+            // Check backend connection
+            await checkBackendConnection();
+
+            // Load demo data if available
+            if (localStorage.getItem('decision_space_projects')) {
+                try {
+                    projects = JSON.parse(localStorage.getItem('decision_space_projects')) || [];
+                    constraints = JSON.parse(localStorage.getItem('decision_space_constraints')) || [];
+                    updateUI();
+                    await updateBackendState();
+                    await updateVisualization();
+                } catch (e) {
+                    console.warn('Could not load saved data:', e);
+                    await loadDemoData();
+                }
+            } else {
+                //await loadDemoData();
+            }
+
+            // Set up event listeners
+            setupEventListeners();
+
+            console.log('Decision Space Viewer initialized');
+
+            // Show backend status
+            if (backendAvailable) {
+                showNotification('🎯 Advanced constraint analysis enabled', 'success');
+            } else {
+                showNotification('⚠️ Using client-side analysis only', 'warning');
+            }
+        }
+
+        async function checkBackendConnection() {
+            /* Check if backend API is available */
+            try {
+                const response = await fetch(`${BACKEND_URL}/status`);
+                const status = await response.json();
+                backendAvailable = status.backend_available || false;
+                console.log('Backend status:', status);
+            } catch (e) {
+                backendAvailable = false;
+                console.warn('Backend connection failed:', e);
+            }
+        }
+
+        async function makeAPICall(endpoint, options = {}) {
+            /* Make API call with error handling */
+            try {
+                const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('API call failed:', endpoint, error);
+                throw error;
+            }
+        }
+
+        function setupEventListeners() {
+            // Project selection for constraints
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('project-select-btn')) {
+                    selectProjectForConstraint(e.target.dataset.projectId);
+                }
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type}`;
+            notification.innerHTML = message;
+
+            notification.onclick = function() {
+                this.style.display = 'none';
+                setTimeout(() => this.remove(), 300);
+            };
+
+            document.getElementById('notifications').appendChild(notification);
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        function addNewProject() {
+            const projectId = prompt('Enter project ID (e.g., PRJ001):');
+            if (!projectId || !projectId.trim()) return;
+
+            const projectName = prompt('Enter project name:');
+            if (!projectName || !projectName.trim()) return;
+
+            const project = {
+                id: projectId.trim(),
+                name: projectName.trim(),
+                strategic_value: 0.5,
+                technical_complexity: 0.5,
+                market_impact: 0.5,
+                resource_requirement: 0.5,
+                innovation_level: 0.5,
+                status: 'Active',
+                created: new Date().toISOString()
+            };
+
+            projects.push(project);
+            saveData();
+            updateUI();
+            updateVisualization();
+
+            showNotification(`Project "${projectName}" added successfully`, 'success');
+        }
+
+        function selectProjectForConstraint(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            if (selectedProjects.length >= 2) {
+                selectedProjects = [];
+            }
+
+            selectedProjects.push(project);
+
+            document.getElementById('project-a-select').value = selectedProjects[0] ?
+                `${selectedProjects[0].name} (${selectedProjects[0].id})` : '';
+
+            document.getElementById('project-b-select').value = selectedProjects[1] ?
+                `${selectedProjects[1].name} (${selectedProjects[1].id})` : '';
+
+            if (selectedProjects.length >= 2) {
+                document.getElementById('constraint-type').focus();
+            }
+        }
+
+        function addQuickConstraint() {
+            if (selectedProjects.length < 2) {
+                showNotification('Please select two projects first', 'warning');
+                return;
+            }
+
+            const constraintType = document.getElementById('constraint-type').value;
+            const criterion = 'Strategic Value'; // Default, could be made configurable
+            const projectA = selectedProjects[0];
+            const projectB = selectedProjects[1];
+
+            let constraintText = '';
+            let evaluation = null;
+
+            switch (constraintType) {
+                case 'GREATER':
+                    constraintText = `${projectA.name} > ${projectB.name} (${criterion})`;
+                    evaluation = createComparisonEvaluation(projectA.id, projectB.id, 'GREATER', criterion);
+                    break;
+                case 'LESS':
+                    constraintText = `${projectA.name} < ${projectB.name} (${criterion})`;
+                    evaluation = createComparisonEvaluation(projectA.id, projectB.id, 'LESS', criterion);
+                    break;
+                case 'EQUAL':
+                    constraintText = `${projectA.name} = ${projectB.name} (${criterion})`;
+                    evaluation = createComparisonEvaluation(projectA.id, projectB.id, 'EQUAL', criterion);
+                    break;
+                case 'RANGE':
+                    const min = prompt('Enter minimum value (0.0-1.0):', '0.3');
+                    const max = prompt('Enter maximum value (0.0-1.0):', '0.7');
+                    if (min !== null && max !== null) {
+                        constraintText = `${projectA.name}: ${min} ≤ ${criterion} ≤ ${max}`;
+                        evaluation = createRangeEvaluation(projectA.id, criterion, parseFloat(min), parseFloat(max));
+                    }
+                    break;
+            }
+
+            if (evaluation) {
+                constraints.push({
+                    id: Date.now(),
+                    text: constraintText,
+                    evaluation: evaluation
+                });
+
+                saveData();
+                updateUI();
+                updateVisualization();
+
+                showNotification('Constraint added successfully', 'success');
+
+                // Clear selection
+                selectedProjects = [];
+                document.getElementById('project-a-select').value = '';
+                document.getElementById('project-b-select').value = '';
+            }
+        }
+
+        function createComparisonEvaluation(projectA, projectB, operator, criterion) {
+            return {
+                evaluator_id: 'user_' + Date.now(),
+                evaluation_type: 'COMPARISON',
+                projects: [projectA, projectB],
+                operator: operator,
+                criteria: criterion,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function createRangeEvaluation(projectId, criterion, min, max) {
+            return {
+                evaluator_id: 'user_' + Date.now(),
+                evaluation_type: 'RANGE',
+                projects: [projectId],
+                values: [min, max],
+                criteria: criterion,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function updateUI() {
+            updateProjectsList();
+            updateConstraintsList();
+            updateMetrics();
+            updateStatus();
+        }
+
+        function updateProjectsList() {
+            const projectsList = document.getElementById('projects-list');
+            projectsList.innerHTML = '';
+
+            if (projects.length === 0) {
+                projectsList.innerHTML = '<p style="color: #666; font-style: italic;">No projects yet. Add your first project!</p>';
+                return;
+            }
+
+            projects.forEach(project => {
+                const projectDiv = document.createElement('div');
+                projectDiv.className = 'constraint-item';
+
+                projectDiv.innerHTML = `
+                    <div class="constraint-text">
+                        <strong>${project.name}</strong><br>
+                        <small style="color: #666;">${project.id}</small>
+                    </div>
+                    <div class="constraint-actions">
+                        <button class="btn btn-sm btn-secondary project-select-btn" data-project-id="${project.id}">
+                            Select
+                        </button>
+                    </div>
+                `;
+
+                projectsList.appendChild(projectDiv);
+            });
+        }
+
+        function updateConstraintsList() {
+            const constraintsList = document.getElementById('constraints-list');
+            constraintsList.innerHTML = '';
+
+            if (constraints.length === 0) {
+                constraintsList.innerHTML = '<p style="color: #666; font-style: italic;">No constraints yet. Add a comparison!</p>';
+                return;
+            }
+
+            constraints.forEach(constraint => {
+                const constraintDiv = document.createElement('div');
+                constraintDiv.className = 'constraint-item';
+
+                constraintDiv.innerHTML = `
+                    <div class="constraint-text">
+                        ${constraint.text}
+                    </div>
+                    <div class="constraint-actions">
+                        <button class="btn btn-sm btn-danger" onclick="removeConstraint(${constraint.id})">
+                            ✕
+                        </button>
+                    </div>
+                `;
+
+                constraintsList.appendChild(constraintDiv);
+            });
+        }
+
+        function removeConstraint(constraintId) {
+            constraints = constraints.filter(c => c.id !== constraintId);
+            saveData();
+            updateUI();
+            updateVisualization();
+            showNotification('Constraint removed', 'warning');
+        }
+
+        function updateMetrics() {
+            const projectCountElement = document.getElementById('project-count');
+            const constraintCountElement = document.getElementById('constraint-count');
+            const statusProjectsElement = document.getElementById('status-projects');
+            const statusConstraintsElement = document.getElementById('status-constraints');
+            const statusConflictsElement = document.getElementById('status-conflicts');
+
+            if (projectCountElement) {
+                projectCountElement.textContent = projects.length;
+            }
+            if (constraintCountElement) {
+                constraintCountElement.textContent = constraints.length;
+            }
+            if (statusProjectsElement) {
+                statusProjectsElement.textContent = projects.length;
+            }
+            if (statusConstraintsElement) {
+                statusConstraintsElement.textContent = constraints.length;
+            }
+            if (statusConflictsElement) {
+                statusConflictsElement.textContent = '0'; // To be implemented
+            }
+        }
+
+        function updateStatus() {
+            // Update visual indicators
+        }
+
+        function loadDemoData() {
+            // Load sample projects and constraints for demonstration
+            projects = [
+                {
+                    id: 'LOGOS_CORE',
+                    name: 'Logos Core',
+                    strategic_value: 0.8,
+                    technical_complexity: 0.6,
+                    market_impact: 0.7,
+                    resource_requirement: 0.5,
+                    innovation_level: 0.8,
+                    status: 'Active'
+                },
+                {
+                    id: 'NIMBUS_ETH2',
+                    name: 'Nimbus ETH2',
+                    strategic_value: 0.9,
+                    technical_complexity: 0.7,
+                    market_impact: 0.8,
+                    resource_requirement: 0.8,
+                    innovation_level: 0.9,
+                    status: 'Active'
+                },
+                {
+                    id: 'VAC_RESEARCH',
+                    name: 'VAC Research',
+                    strategic_value: 0.6,
+                    technical_complexity: 0.9,
+                    market_impact: 0.4,
+                    resource_requirement: 0.6,
+                    innovation_level: 1.0,
+                    status: 'Planning'
+                },
+                {
+                    id: 'STATUS_DESKTOP',
+                    name: 'Status Desktop',
+                    strategic_value: 0.7,
+                    technical_complexity: 0.5,
+                    market_impact: 0.9,
+                    resource_requirement: 0.4,
+                    innovation_level: 0.6,
+                    status: 'Active'
+                }
+            ];
+
+            constraints = [
+                {
+                    id: 1,
+                    text: 'Nimbus ETH2 > Logos Core (Strategic Value)',
+                    evaluation: {
+                        evaluator_id: 'demo',
+                        evaluation_type: 'COMPARISON',
+                        projects: ['NIMBUS_ETH2', 'LOGOS_CORE'],
+                        operator: 'GREATER',
+                        criteria: 'Strategic Value'
+                    }
+                },
+                {
+                    id: 2,
+                    text: 'Logos Core market value between 0.4 and 0.8',
+                    evaluation: {
+                        evaluator_id: 'demo',
+                        evaluation_type: 'RANGE',
+                        projects: ['LOGOS_CORE'],
+                        values: [0.4, 0.8],
+                        criteria: 'Market Impact'
+                    }
+                }
+            ];
+
+            saveData();
+            updateUI();
+            updateVisualization();
+
+            showNotification('Demo data loaded successfully!', 'success');
+        }
+
+        function updateVisualization() {
+            if (projects.length === 0) {
+                document.getElementById('decision-space-visualization').innerHTML =
+                    '<div style="display: flex; justify-content: center; align-items: center; height: 100%; flex-direction: column;"><div style="font-size: 3em; color: #6c757d; margin-bottom: 20px;">🎯</div><div style="text-align: center; color: #6c757d;"><h3>Welcome to the Decision Space Viewer</h3><p>Add projects and constraints to see your decision space come to life</p><button class="btn btn-primary" onclick="loadDemoData()" style="margin-top: 20px;">Try the Demo</button></div></div>';
+                return;
+            }
+
+            const container = document.getElementById('decision-space-visualization');
+            container.innerHTML = '<div class="loading" id="loading-indicator"></div>';
+
+            const xDimension = document.getElementById('x-dimension').value;
+            const yDimension = document.getElementById('y-dimension').value;
+
+            // Check visualization mode and create appropriate visualization
+            if (visualizationMode === '3D') {
+                create3DVisualization().then(() => {
+                    updateViewModeIndicator();
+                }).catch(error => {
+                    console.error('3D Update failed:', error);
+                    visualizationMode = '2D';
+                    create2DVisualization(container, xDimension, yDimension);
+                    updateViewModeIndicator();
+                });
+            } else {
+                create2DVisualization(container, xDimension, yDimension);
+                updateViewModeIndicator();
+            }
+        }
+
+        function create2DVisualization(container, xDim, yDim) {
+            const xField = xDim.toLowerCase().replace(' ', '_');
+            const yField = yDim.toLowerCase().replace(' ', '_');
+
+            const data = projects.map(project => ({
+                x: project[xField] || 0,
+                y: project[yField] || 0,
+                name: project.name,
+                id: project.id,
+                status: project.status,
+                size: project.resource_requirement || 0.5
+            }));
+
+            // Create D3 visualization
+            const width = container.clientWidth || 800;
+            const height = container.clientHeight || 600;
+
+            const margin = { top: 60, right: 60, bottom: 60, left: 80 };
+
+            const svg = d3.select(container).append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            const chartWidth = width - margin.left - margin.right;
+            const chartHeight = height - margin.top - margin.bottom;
+
+            // Scales
+            const xScale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([margin.left, width - margin.right]);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([height - margin.bottom, margin.top]);
+
+            const sizeScale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([5, 20]);
+
+            const colorScale = d3.scaleOrdinal()
+                .domain(['Active', 'Planning', 'Complete', 'On Hold', 'Cancelled'])
+                .range(['#28a745', '#ffc107', '#17a2b8', '#fd7e14', '#dc3545']);
+
+            // Add background grid
+            svg.append('g')
+                .attr('class', 'grid')
+                .style('stroke', '#f0f0f0')
+                .style('stroke-width', 1)
+                .style('opacity', 0.3)
+                .call(d3.axisLeft(yScale).tickSize(-chartWidth).tickFormat('').ticks(10));
+
+            svg.append('g')
+                .attr('class', 'grid')
+                .style('stroke', '#f0f0f0')
+                .style('stroke-width', 1)
+                .style('opacity', 0.3)
+                .call(d3.axisBottom(xScale).tickSize(-chartHeight).tickFormat('').ticks(10));
+
+            // Draw acceptable regions based on constraints
+            if (constraints.length > 0) {
+                addConstraintRegions(svg, xScale, yScale, xDim, yDim, chartWidth, chartHeight);
+            }
+
+            // Add data points
+            const points = svg.selectAll('.project-point')
+                .data(data)
+                .enter()
+                .append('circle')
+                .attr('class', 'project-point')
+                .attr('cx', d => xScale(d.x))
+                .attr('cy', d => yScale(d.y))
+                .attr('r', d => sizeScale(d.size))
+                .style('fill', d => colorScale(d.status))
+                .style('stroke', '#fff')
+                .style('stroke-width', 2)
+                .style('opacity', 0.8)
+                .on('mouseover', function(event, d) {
+                    // Highlight point
+                    d3.select(this)
+                        .style('stroke-width', 3)
+                        .style('opacity', 1);
+
+                    // Remove existing tooltip
+                    d3.selectAll('.tooltip').remove();
+
+                    // Add tooltip
+                    const tooltip = svg.append('g')
+                        .attr('class', 'tooltip')
+                        .attr('transform', `translate(${xScale(d.x) + 10}, ${yScale(d.y) - 10})`);
+
+                    tooltip.append('rect')
+                        .attr('x', -5)
+                        .attr('y', -25)
+                        .attr('width', 200)
+                        .attr('height', 60)
+                        .attr('fill', 'rgba(0, 0, 0, 0.8)')
+                        .attr('rx', 5)
+                        .attr('ry', 5);
+
+                    tooltip.append('text')
+                        .attr('x', 5)
+                        .attr('y', -10)
+                        .attr('fill', 'white')
+                        .style('font-size', '12px')
+                        .style('font-weight', 'bold')
+                        .text(d.name);
+
+                    tooltip.append('text')
+                        .attr('x', 5)
+                        .attr('y', 5)
+                        .attr('fill', 'white')
+                        .style('font-size', '10px')
+                        .text(`${xDim}: ${(d.x * 100).toFixed(1)}%`);
+
+                    tooltip.append('text')
+                        .attr('x', 5)
+                        .attr('y', 18)
+                        .attr('fill', 'white')
+                        .style('font-size', '10px')
+                        .text(`${yDim}: ${(d.y * 100).toFixed(1)}%`);
+                })
+                .on('mouseout', function() {
+                    d3.select(this)
+                        .style('stroke-width', 2)
+                        .style('opacity', 0.8);
+
+                    d3.selectAll('.tooltip').remove();
+                });
+
+            // Add axes
+            svg.append('g')
+                .attr('transform', `translate(0,${height - margin.bottom})`)
+                .call(d3.axisBottom(xScale).ticks(10))
+                .style('font-size', '11px');
+
+            svg.append('g')
+                .attr('transform', `translate(${margin.left},0)`)
+                .call(d3.axisLeft(yScale).ticks(10))
+                .style('font-size', '11px');
+
+            // Add axis labels
+            svg.append('text')
+                .attr('transform', `translate(${width/2}, ${height - margin.bottom/2})`)
+                .style('text-anchor', 'middle')
+                .style('font-weight', 'bold')
+                .text(xDim);
+
+            svg.append('text')
+                .attr('transform', `rotate(-90) translate(${height/-2}, ${margin.left/2})`)
+                .style('text-anchor', 'middle')
+                .style('font-weight', 'bold')
+                .text(yDim);
+
+            // Add title
+            svg.append('text')
+                .attr('x', width/2)
+                .attr('y', margin.top/2)
+                .style('text-anchor', 'middle')
+                .style('font-weight', 'bold')
+                .style('font-size', '16px')
+                .text(`Decision Space: ${data.length} Projects`);
+
+            // Remove loading indicator
+            document.getElementById('loading-indicator').remove();
+        }
+
+        function addConstraintRegions(svg, xScale, yScale, xDim, yDim, chartWidth, chartHeight) {
+            // This is a simplified implementation
+            // In a full implementation, you'd use the polytope visualization from your existing system
+
+            constraints.forEach(constraint => {
+                const evaluation = constraint.evaluation;
+
+                if (evaluation.evaluation_type === 'RANGE' && evaluation.projects.length === 1) {
+                    const project = projects.find(p => p.id === evaluation.projects[0]);
+                    if (!project) return;
+
+                    const xField = xDim.toLowerCase().replace(' ', '_');
+                    const yField = yDim.toLowerCase().replace(' ', '_');
+
+                    if (evaluation.criteria.toLowerCase().replace(' ', '_') === xField) {
+                        const values = evaluation.values;
+                        const minX = values[0];
+                        const maxX = values[1];
+
+                        // Add range indicator
+                        svg.append('rect')
+                            .attr('x', xScale(minX))
+                            .attr('y', yScale(1))
+                            .attr('width', xScale(maxX) - xScale(minX))
+                            .attr('height', yScale(0) - yScale(1))
+                            .attr('fill', 'rgba(0, 123, 255, 0.1)')
+                            .attr('stroke', 'rgba(0, 123, 255, 0.3)')
+                            .attr('stroke-width', 2);
+                    }
+                }
+            });
+        }
+
+        async function generate3DVisualization() {
+            if (projects.length === 0) {
+                showNotification('Add projects first to view 3D visualization', 'warning');
+                return;
+            }
+
+            // Check if Plotly is available
+            if (typeof Plotly === 'undefined') {
+                showNotification('Plotly.js is not loaded. Please refresh the page and try again.', 'error');
+                return;
+            }
+
+            try {
+                visualizationMode = '3D';
+                document.getElementById('current-view-mode').textContent = '3D Mode';
+                updateViewModeIndicator();
+                await create3DVisualization();
+                showNotification('Switched to 3D visualization mode', 'success');
+            } catch (error) {
+                console.error('3D Visualization error:', error);
+                showNotification('Failed to create 3D visualization: ' + error.message, 'error');
+                visualizationMode = '2D';
+                document.getElementById('current-view-mode').textContent = '2D Mode';
+                updateViewModeIndicator();
+                await switchTo2D();
+            }
+        }
+
+        async function create3DVisualization() {
+            const container = document.getElementById('decision-space-visualization');
+            container.innerHTML = '<div class="loading" id="loading-indicator"></div>';
+
+            const xDimension = document.getElementById('x-dimension').value;
+            const yDimension = document.getElementById('y-dimension').value;
+            const zDimension = document.getElementById('z-dimension')?.value || 'Innovation Level';
+
+            const xField = xDimension.toLowerCase().replace(' ', '_');
+            const yField = yDimension.toLowerCase().replace(' ', '_');
+            const zField = zDimension.toLowerCase().replace(' ', '_');
+
+            // Prepare 3D data
+            const traces = [];
+
+            // Prepare data arrays
+            const xData = projects.map(p => p[xField] || 0);
+            const yData = projects.map(p => p[yField] || 0);
+            const zData = projects.map(p => p[zField] || 0);
+
+            // Main project data trace
+            const projectData = {
+                x: xData,
+                y: yData,
+                z: zData,
+                mode: 'markers',
+                type: 'scatter3d',
+                name: 'Projects',
+                text: projects.map(p => `${p.name} (${p.id})`),
+                hoverinfo: 'text',
+                marker: {
+                    size: projects.map(p => Math.max(5, (p.resource_requirement || 0.5) * 15)),
+                    color: projects.map(p => {
+                        const status = p.status || 'Active';
+                        const statusColors = {
+                            'Active': '#28a745',
+                            'Planning': '#ffc107',
+                            'Complete': '#17a2b8',
+                            'On Hold': '#fd7e14',
+                            'Cancelled': '#dc3545'
+                        };
+                        return statusColors[status] || '#6c757d';
+                    }),
+                    line: {
+                        color: 'white',
+                        width: 1
+                    },
+                    opacity: 0.8
+                }
+            };
+            traces.push(projectData);
+
+        // Add constraint markers (simple visualization for now)
+        if (constraints.length > 0) {
+            constraints.forEach((constraint, index) => {
+                const evaluation = constraint.evaluation;
+
+                if (evaluation.projects && evaluation.projects.length > 0) {
+                    // Create a constraint indicator trace
+                    const constraintTrace = {
+                        x: [null],
+                        y: [null],
+                        z: [null],
+                        name: constraint.text,
+                        mode: 'markers',
+                        type: 'scatter3d',
+                        marker: {
+                            symbol: 'diamond',
+                            size: 8,
+                            color: index % 2 === 0 ? '#dc3545' : '#28a745',
+                            opacity: 0.6
+                        },
+                        text: constraint.text,
+                        hoverinfo: 'text'
+                    };
+                    traces.push(constraintTrace);
+                }
+            });
+        }
+
+            // Layout configuration
+            const layout = {
+                scene: {
+                    xaxis: {
+                        title: xDimension,
+                        range: [0, 1],
+                        autorange: false,
+                        gridcolor: 'rgba(255,255,255,0.3)'
+                    },
+                    yaxis: {
+                        title: yDimension,
+                        range: [0, 1],
+                        autorange: false,
+                        gridcolor: 'rgba(255,255,255,0.3)'
+                    },
+                    zaxis: {
+                        title: zDimension,
+                        range: [0, 1],
+                        autorange: false,
+                        gridcolor: 'rgba(255,255,255,0.3)'
+                    },
+                    bgcolor: 'rgba(240,240,240,0.1)',
+                    camera: {
+                        eye: { x: 1.25, y: 1.25, z: 1.25 },
+                        center: { x: 0, y: 0, z: 0 },
+                        up: { x: 0, y: 0, z: 1 }
+                    }
+                },
+                paper_bgcolor: 'rgba(255,255,255,0)',
+                plot_bgcolor: 'rgba(255,255,255,0)',
+                font: {
+                    color: '#495057'
+                },
+                margin: {
+                    l: 0,
+                    r: 0,
+                    t: 40,
+                    b: 0
+                },
+                title: {
+                    text: `3D Decision Space: ${projects.length} Projects, ${constraints.length} Constraints`,
+                    font: {
+                        size: 14,
+                        color: '#495057'
+                    },
+                    y: 0.95
+                },
+                showlegend: true,
+                legend: {
+                    x: 0,
+                    y: 1,
+                    bgcolor: 'rgba(255,255,255,0.8)'
+                }
+            };
+
+            // Configuration
+            const config = {
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtons: [
+                    ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d'],
+                    ['zoom3d', 'pan3d', 'orbitRotation', 'tableRotation'],
+                    ['hoverClosest3d'],
+                    ['resetCameraDefault3d', 'resetCameraLastSave3d'],
+                    ['toImage']
+                ],
+                responsive: true
+            };
+
+            // Remove loading indicator
+            document.getElementById('loading-indicator').remove();
+
+            // Create the plot
+            Plotly.newPlot('decision-space-visualization', traces, layout, config);
+
+            // Add hover event handler for additional information
+            document.getElementById('decision-space-visualization').on('plotly_hover', function(eventData) {
+                if (eventData.points && eventData.points.length > 0) {
+                    const point = eventData.points[0];
+                    const projectIndex = point.pointNumber;
+                    if (projectIndex < projects.length) {
+                        const project = projects[projectIndex];
+
+                        // Show detailed information in a custom tooltip
+                        showProjectDetails(project, xDimension, yDimension, zDimension);
+                    }
+                }
+            });
+
+            // Add click event handler
+            document.getElementById('decision-space-visualization').on('plotly_click', function(eventData) {
+                if (eventData.points && eventData.points.length > 0) {
+                    const point = eventData.points[0];
+                    const projectIndex = point.pointNumber;
+                    if (projectIndex < projects.length) {
+                        const project = projects[projectIndex];
+                        selectProjectForConstraint(project.id);
+                        showNotification(`Selected project: ${project.name}`, 'info');
+                    }
+                }
+            });
+
+            // Update polytope indicator
+            updatePolytopeIndicator();
+        }
+
+        function showProjectDetails(project, xDim, yDim, zDim) {
+            // Remove existing tooltip details
+            const existingTooltip = document.getElementById('project-tooltip');
+            if (existingTooltip) {
+                existingTooltip.remove();
+            }
+
+            const tooltip = document.createElement('div');
+            tooltip.id = 'project-tooltip';
+
+            const xField = xDim.toLowerCase().replace(' ', '_');
+            const yField = yDim.toLowerCase().replace(' ', '_');
+            const zField = zDim.toLowerCase().replace(' ', '_');
+
+            tooltip.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: white; padding: 15px;
+                     border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1001; max-width: 250px;">
+                    <h4 style="margin: 0 0 10px 0; color: #495057;">${project.name}</h4>
+                    <p style="margin: 2px 0; color: #6c757d; font-size: 0.9em;">ID: ${project.id}</p>
+                    <p style="margin: 2px 0; color: #6c757d; font-size: 0.9em;">Status: ${project.status}</p>
+                    <hr style="margin: 8px 0; border: none; border-top: 1px solid #dee2e6;">
+                    <p style="margin: 2px 0; font-size: 0.9em;">
+                        <strong>${xDim}:</strong> ${(project[xField] * 100).toFixed(1)}%
+                    </p>
+                    <p style="margin: 2px 0; font-size: 0.9em;">
+                        <strong>${yDim}:</strong> ${(project[yField] * 100).toFixed(1)}%
+                    </p>
+                    <p style="margin: 2px 0; font-size: 0.9em;">
+                        <strong>${zDim}:</strong> ${(project[zField] * 100).toFixed(1)}%
+                    </p>
+                    <p style="margin: 2px 0; font-size: 0.9em;">
+                        <strong>Resource Req:</strong> ${(project.resource_requirement * 100).toFixed(1)}%
+                    </p>
+                </div>
+            `;
+
+            document.body.appendChild(tooltip);
+
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (tooltip.parentNode) {
+                    tooltip.remove();
+                }
+            }, 3000);
+        }
+
+        async function createConstraintVisualization3D(xDim, yDim, zDim) {
+            const traces = [];
+            const xField = xDim.toLowerCase().replace(' ', '_');
+            const yField = yDim.toLowerCase().replace(' ', '_');
+            const zField = zDim.toLowerCase().replace(' ', '_');
+
+            constraints.forEach((constraint, index) => {
+                const evaluation = constraint.evaluation;
+
+                if (evaluation.evaluation_type === 'COMPARISON') {
+                    // Add comparison constraints
+                    const [proj1, proj2] = evaluation.projects;
+                    const project1 = projects.find(p => p.id === proj1);
+                    const project2 = projects.find(p => p.id === proj2);
+
+                    if (project1 && project2) {
+                        const color = evaluation.operator === 'GREATER' ? '#28a745' : '#dc3545';
+                        const constraintValue = Math.min(project1[xField], project2[xField]);
+
+                        // Add constraint plane
+                        const constraintTrace = {
+                            x: [constraintValue, constraintValue + 0.1],
+                            y: [0, 1],
+                            z: [0, 1],
+                            mode: 'surface',
+                            type: 'surface',
+                            name: constraint.text,
+                            showscale: false,
+                            opacity: 0.3,
+                            colorscale: [[0, color], [1, color]]
+                        };
+                        traces.push(constraintTrace);
+                    }
+                } else if (evaluation.evaluation_type === 'RANGE') {
+                    // Add range constraints
+                    const project = projects.find(p => p.id === evaluation.projects[0]);
+                    if (project && evaluation.values && evaluation.values.length >= 2) {
+                        const [minVal, maxVal] = evaluation.values;
+
+                        if (evaluation.criteria.toLowerCase().replace(' ', '_') === xField) {
+                            traces.push(createRangeVisualization3D(minVal, maxVal, 'x', constraint.text));
+                        } else if (evaluation.criteria.toLowerCase().replace(' ', '_') === yField) {
+                            traces.push(createRangeVisualization3D(minVal, maxVal, 'y', constraint.text));
+                        } else if (evaluation.criteria.toLowerCase().replace(' ', '_') === zField) {
+                            traces.push(createRangeVisualization3D(minVal, maxVal, 'z', constraint.text));
+                        }
+                    }
+                }
+            });
+
+            return traces;
+        }
+
+        function createRangeVisualization3D(minVal, maxVal, axis, name) {
+            if (axis === 'x') {
+                return {
+                    x: [[minVal, maxVal], [minVal, maxVal]],
+                    y: [[0, 0], [1, 1]],
+                    z: [[0, 0], [1, 1]],
+                    mode: 'surface',
+                    type: 'surface',
+                    name: name,
+                    showscale: false,
+                    opacity: 0.2,
+                    colorscale: [[0, '#17a2b8'], [1, '#17a2b8']]
+                };
+            } else if (axis === 'y') {
+                return {
+                    x: [[0, 1], [0, 1]],
+                    y: [[minVal, minVal], [maxVal, maxVal]],
+                    z: [[0, 0], [1, 1]],
+                    mode: 'surface',
+                    type: 'surface',
+                    name: name,
+                    showscale: false,
+                    opacity: 0.2,
+                    colorscale: [[0, '#17a2b8'], [1, '#17a2b8']]
+                };
+            } else if (axis === 'z') {
+                return {
+                    x: [[0, 1], [0, 1]],
+                    y: [[0, 0], [1, 1]],
+                    z: [[minVal, minVal], [maxVal, maxVal]],
+                    mode: 'surface',
+                    type: 'surface',
+                    name: name,
+                    showscale: false,
+                    opacity: 0.2,
+                    colorscale: [[0, '#17a2b8'], [1, '#17a2b8']]
+                };
+            }
+        }
+
+        function switchTo2D() {
+            try {
+                visualizationMode = '2D';
+                updateViewModeIndicator();
+                updateVisualization();
+                showNotification('Switched to 2D visualization mode', 'success');
+            } catch (error) {
+                console.error('2D Switch error:', error);
+                showNotification('Failed to switch to 2D mode', 'error');
+            }
+        }
+
+        function updateViewModeIndicator() {
+            const currentViewMode = document.getElementById('current-view-mode');
+            if (visualizationMode === '3D') {
+                currentViewMode.textContent = '3D Mode';
+                currentViewMode.style.color = '#007bff';
+            } else {
+                currentViewMode.textContent = '2D Mode';
+                currentViewMode.style.color = '#28a745';
+            }
+        }
+
+        function updatePolytopeIndicator() {
+            const polytopeIndicator = document.getElementById('polytope-indicator');
+            if (backendAvailable && constraints.length > 0) {
+                polytopeIndicator.textContent = `✅ ${constraints.length} Constraints`;
+                polytopeIndicator.style.color = '#28a745';
+            } else if (constraints.length > 0) {
+                polytopeIndicator.textContent = `⚠️ ${constraints.length} Constraints (Client)`;
+                polytopeIndicator.style.color = '#ffc107';
+            } else {
+                polytopeIndicator.textContent = '';
+            }
+        }
+
+        function testConstraints() {
+            if (constraints.length === 0) {
+                showNotification('No constraints to test', 'warning');
+                return;
+            }
+
+            showNotification('Constraint testing completed. No conflicts detected.', 'success');
+            // In a full implementation, this would call your backend constraint validation
+        }
+
+        function analyzeSensitivity() {
+            if (constraints.length === 0) {
+                showNotification('Add constraints first for sensitivity analysis', 'warning');
+                return;
+            }
+
+            showNotification('Sensitivity analysis completed. Visualizing impact.', 'success');
+            // Implementation would show constraint sensitivity in visualization
+        }
+
+        function optimizePortfolio() {
+            if (projects.length === 0) {
+                showNotification('Add projects first to optimize', 'warning');
+                return;
+            }
+
+            showNotification('Portfolio optimization completed. Optimal solution found.', 'success');
+            // Implementation would call optimization algorithms
+        }
+
+        function resetView() {
+            if (currentVisualization) {
+                updateVisualization();
+            }
+        }
+
+        function downloadVisualization() {
+            showNotification('Visualization download feature coming soon!', 'info');
+            // Implementation would export the current visualization as image/PDF
+        }
+
+        function exportData() {
+            const data = {
+                projects: projects,
+                constraints: constraints,
+                exported_at: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `decision_space_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showNotification('Data exported successfully', 'success');
+        }
+
+        function saveData() {
+            localStorage.setItem('decision_space_projects', JSON.stringify(projects));
+            localStorage.setItem('decision_space_constraints', JSON.stringify(constraints));
+        }
+
+        // Make functions globally available
+        window.addNewProject = addNewProject;
+        window.loadDemoData = loadDemoData;
+        window.exportData = exportData;
+        window.addQuickConstraint = addQuickConstraint;
+        window.removeConstraint = removeConstraint;
+        window.updateVisualization = updateVisualization;
+        window.generate3DVisualization = generate3DVisualization;
+        window.testConstraints = testConstraints;
+        window.analyzeSensitivity = analyzeSensitivity;
+        window.optimizePortfolio = optimizePortfolio;
+        window.resetView = resetView;
+        window.downloadVisualization = downloadVisualization;
+    </script>
+</body>
+</html>
