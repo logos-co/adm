@@ -39,7 +39,7 @@ toy-example/
 
 ## Data Sources
 
-The visualizations are built from CSV files in the `../toy-data/` directory:
+The visualizations are built from CSV files in the `toy-data/` directory:
 
 - **projects.csv** - Core project information (budget, status, timeline)
 - **dependencies.csv** - Project interdependencies and relationships
@@ -247,7 +247,7 @@ The `data_preparation.py` script implements a robust ETL pipeline:
 
 ### Data Schema Changes
 
-1. Update CSV files in `../toy-data/` directory
+1. Update CSV files in `toy-data/` directory
 2. Modify `data_preparation.py` to handle new fields
 3. Update visualization code to use new data attributes
 4. Test data pipeline and visualizations

@@ -21,27 +21,33 @@ The portfolio management system provides data models, visualization tools, and a
 ├── wizard_backend.py        # Python backend integration
 ├── WIZARD_README.md          # Wizard documentation and usage guide
 ├── dl-example/               # Deep Learning Portfolio Selection Framework
-│   ├── qualitative_evaluation_translator.py # Core translation module
-│   ├── evaluation_input_parser.py # Natural language processing
-│   ├── logos_nimbus_status_projects.py # Mocked project data
-│   ├── portfolio_optimization_demo.py # Complete mock demonstration
-│   ├── test_qualitative_evaluation.py # Comprehensive test suite
-│   └── README.md             # Detailed implementation guide
-├── toy-data/                 # Sample dataset for demonstrations
-│   ├── projects.csv          # Core project information
-│   ├── dependencies.csv      # Project interdependencies
-│   ├── resources.csv         # Available resources
-│   └── [additional data files]
+│   ├── README.md                     # Main project documentation
+│   ├── project_portfolio_index.html # Main visualization dashboard
+│   ├── DIRECTORY_STRUCTURE.md       # Directory documentation
+│   ├── src/                          # Source code modules
+│   ├── tests/                        # Test suite
+│   ├── examples/                     # Usage demonstrations
+│   ├── data/                         # Data files (JSON, CSV)
+│   ├── docs/                         # Documentation
+│   └── visualizations/              # Generated HTML visualizations
+│       ├── phase1/                   # Phase 1 polytope visualizations
+│       ├── phase2/                   # Phase 2 trade-off analysis
+│       └── portfolio/                # Project portfolio visualizations
 └── toy-example/              # Complete visualization example
     ├── README.md             # Detailed project documentation
     ├── data_preparation.py   # Data processing pipeline
     ├── portfolio_visualizations.html # Interactive dashboard
+    ├── toy-data/             # Sample CSV datasets for this example
+    │   ├── projects.csv      # Core project information
+    │   ├── dependencies.csv  # Project interdependencies
+    │   ├── resources.csv     # Available resources
+    │   └── [additional data files]
     └── [implementation files]
 ```
 
 ## Key Components
 
-### 1. Data Model (`toy-data/`)
+### 1. Data Model (`toy-example/toy-data/`)
 NOTE: this data model doesn't coincide with data models of `dl-example`
 
 A comprehensive data schema designed for portfolio analysis:
@@ -53,11 +59,15 @@ A comprehensive data schema designed for portfolio analysis:
 
 ### 2. Deep Learning Portfolio Selection Framework (`dl-example/`)
 
-(WIP) A robust human-machine framework for project portfolio selection that converts qualitative evaluations into mathematical optimization constraints:
+A robust human-machine framework for project portfolio selection with organized directory structure:
 
+- **Phase 1: Polytope Visualization** - Interactive constraint visualization system
+- **Phase 2: Trade-off Analysis** - Multi-objective optimization and Pareto frontier exploration
+- **DPbQN Integration** - Deep Preference-based Q Network for advanced decision support
 - **Qualitative Evaluation Translation** - Converts human assessments to linear constraints
 - **Natural Language Processing** - Processes stakeholder evaluations in natural language
 - **Mathematical Optimization** - Generates constraint matrices for optimization frameworks
+- **Comprehensive Visualization Suite** - Interactive HTML dashboards organized by phase
 - **Mocked Project Data** - Includes comprehensive Logos/Nimbus/Status ecosystem projects
 - **Comprehensive Testing** - Full test suite with realistic scenarios
 
@@ -126,19 +136,22 @@ To use the qualitative evaluation translation framework:
 # Navigate to the deep learning example
 cd dl-example
 
+# View the main interactive dashboard
+open project_portfolio_index.html
+
 # Run the complete demonstration
-python portfolio_optimization_demo.py
+python examples/portfolio_optimization_demo.py
 
 # Test the core functionality
-python test_qualitative_evaluation.py
+python tests/test_qualitative_evaluation.py
 
 # Try the interactive evaluation parser
-python evaluation_input_parser.py
+python src/evaluation_input_parser.py
 ```
 
 ### Using Your Own Data
 
-1. **Prepare Data** - Format your portfolio data using the schema in `toy-data/`
+1. **Prepare Data** - Format your portfolio data using the schema in `toy-example/toy-data/`
 2. **Process Data** - Adapt `toy-example/data_preparation.py` for your data sources
 3. **Customize Visualizations** - Modify the D3.js code to match your requirements
 4. **Deploy** - Host the visualizations on your preferred web platform
@@ -241,10 +254,11 @@ We welcome contributions to improve the portfolio management system:
 
 - **Project Properties Guidelines** - See `PROJECT_PROPERTIES_GUIDELINES.md` for comprehensive data input recommendations and best practices
 - **Deep Learning Framework** - See `dl-example/README.md` for qualitative evaluation translation guide
+- **Directory Structure** - See `dl-example/DIRECTORY_STRUCTURE.md` for organized file layout
 - **Detailed Documentation** - See `toy-example/README.md` for implementation details
 - **Data Schema** - Reference `toy-example/core-data-flat.md` for data formats
 - **Visualization Patterns** - Review `toy-example/visualization-options.md` for design guidance
-- **Sample Data** - Use `toy-data/` files as templates for your own data
+- **Sample Data** - Use `toy-example/toy-data/` files as templates for your own data
 
 ## License
 

@@ -6,7 +6,7 @@ A comprehensive guide for inputting useful and correct properties for projects i
 
 This document provides guidelines for entering project properties that ensure data quality, consistency, and analytical value across the portfolio management system. The system supports two main data models:
 
-1. **Standard Portfolio Model** (`toy-data/`) - Traditional project management approach
+1. **Standard Portfolio Model** (`toy-example/toy-data/`) - Traditional project management approach
 2. **Advanced Evaluation Model** (`dl-example/`) - Research-focused with qualitative evaluation translation
 
 ## Table of Contents

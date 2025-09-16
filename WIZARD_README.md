@@ -315,7 +315,7 @@ Support for multiple evaluation criteria:
 1. Clone the repository
 2. Open `project_wizard.html` in a modern browser
 3. For backend features, ensure Python dependencies are installed
-4. Test with sample data from `toy-data/` directory
+4. Test with sample data from `toy-example/toy-data/` directory
 
 ### Code Structure
 - **HTML**: Semantic markup with accessibility features
