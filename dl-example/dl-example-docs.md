@@ -2,7 +2,9 @@
 
 ## Overview
 
-The `dl-example/` directory contains a comprehensive system for converting human qualitative evaluations into mathematical constraints for robust project portfolio selection, implementing the constraint space visualization framework described in the research requirements.
+The `dl-example/` directory is a **standalone, independent experiment** containing a comprehensive system for converting human qualitative evaluations into mathematical constraints for robust project portfolio selection.
+
+⚠️ **This is a self-contained research system** - it has its own project data, evaluation methods, and workflows. Do not reference or mix with other examples in this repository.
 
 ## Key Features
 
@@ -286,9 +288,17 @@ The system implements the mathematical framework where:
 
 ## Research Context
 
-This implementation supports the research described in:
-- "Robust Human–Machine Framework for Project Portfolio Selection"
-- Requirements document: `required-resources.md`
-- Constraint space analysis roadmap: `constraint_space_analysis_roadmap.md`
+This is an independent research experiment focused on:
+- Converting qualitative human evaluations into mathematical constraints
+- Interactive polytope visualization of constraint spaces
+- Portfolio optimization using constraint-based approaches
 
 **Status**: ✅ Phase 1 Complete - Interactive Polytope Visualization System Operational
+
+## System Independence
+
+This experiment is completely self-contained with:
+- Its own project data (`logos_nimbus_status_projects.json`)
+- Its own evaluation methods and workflows
+- Its own mathematical framework and algorithms
+- No dependencies on other repository examples

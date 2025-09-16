@@ -2,7 +2,9 @@
 
 ## Overview
 
-The `toy-example/` directory contains a complete visualization implementation with D3.js interactive dashboards for portfolio management and strategic decision-making.
+The `toy-example/` directory is a **standalone, independent experiment** containing a complete D3.js visualization system for portfolio management and strategic decision-making.
+
+⚠️ **This is a self-contained system** - it has its own data, workflows, and documentation. Do not reference or mix with other examples in this repository.
 
 ## Development Workflow
 
@@ -44,7 +46,7 @@ The test suite validates:
 ## Architecture
 
 ### Data Pipeline
-1. **Raw Data**: CSV files in `toy-data/` directory with normalized schema
+1. **Raw Data**: CSV files in `toy-example/toy-data/` directory with normalized schema
 2. **ETL Process**: `data_preparation.py` loads, cleans, and transforms data
 3. **Output**: JSON files in `visualization_data/` optimized for D3.js consumption
 
@@ -102,7 +104,7 @@ The system uses a normalized relational schema across CSV files:
 ## Common Tasks
 
 ### Adding New Data
-1. Update CSV files in `toy-data/` following existing schema
+1. Update CSV files in `toy-example/toy-data/` following existing schema
 2. Run `python data_preparation.py` to regenerate JSON files
 3. Test with `python test_visualizations.py`
 

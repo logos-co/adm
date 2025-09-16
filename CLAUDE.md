@@ -4,15 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This repository contains a portfolio management system with interactive data visualizations and deep learning optimization for strategic decision-making. It consists of:
+This repository contains **two completely independent portfolio management experiments**:
 
-- **toy-data/**: Sample CSV datasets representing projects, dependencies, resources, and strategic metrics
-- **toy-example/**: Complete visualization implementation with D3.js interactive dashboards
-- **dl-example/**: Deep learning portfolio optimization with qualitative evaluation translation
+- **toy-data/**: Shared sample CSV datasets (used by toy-example only)
+- **toy-example/**: **INDEPENDENT** - D3.js interactive visualization experiment
+- **dl-example/**: **INDEPENDENT** - Deep learning qualitative evaluation experiment
 
-## Quick Start
+⚠️ **IMPORTANT**: These are separate, unrelated experiments. Do not mix concepts, data, or approaches between them.
 
-### Interactive Visualizations (toy-example)
+## Independent Examples
+
+### Example 1: Interactive Visualizations (toy-example)
+A standalone D3.js visualization system experiment.
 ```bash
 cd toy-example
 python data_preparation.py
@@ -20,7 +23,8 @@ python -m http.server 8000
 # Access at http://localhost:8000/portfolio_visualizations.html
 ```
 
-### Deep Learning Optimization (dl-example)
+### Example 2: Deep Learning Optimization (dl-example)
+A standalone qualitative evaluation translation experiment.
 ```bash
 cd dl-example
 python demo.py
@@ -28,80 +32,54 @@ python portfolio_optimization_demo.py
 python polytope_visualization_demo.py
 ```
 
-### Testing
+### Testing Each Example
 ```bash
-# Test visualization system
+# Test ONLY the visualization experiment
 cd toy-example && python test_visualizations.py
 
-# Test deep learning system
+# Test ONLY the deep learning experiment  
 cd dl-example && python test_qualitative_evaluation.py
 ```
 
 ## Documentation
 
-For detailed documentation on each component:
+Each example has completely separate documentation:
 
-- **📊 Interactive Visualizations**: See [toy-example-docs.md](./toy-example-docs.md) for complete D3.js visualization documentation
-- **🧠 Deep Learning Optimization**: See [dl-example-docs.md](./dl-example-docs.md) for qualitative evaluation translation and polytope visualization documentation
+- **📊 Visualization Experiment**: See [toy-example-docs.md](./toy-example-docs.md) - D3.js visualization system (uses toy-data)
+- **🧠 Deep Learning Experiment**: See [dl-example-docs.md](./dl-example-docs.md) - Qualitative evaluation translation system (self-contained)
 
-## Key Components
+## Example Details
 
-### Visualization System (toy-example/)
-- **Core Visualizations**: Dependency networks, resource heatmaps, strategic matrices, timeline Gantt charts, portfolio dashboards, decision trees
-- **Supporting Tools**: Export utilities, filter controls, scenario comparison
-- **Data Pipeline**: CSV → Python ETL → JSON → D3.js visualizations
+⚠️ **Work on ONE example at a time. Do not mix or cross-reference between examples.**
 
-### Deep Learning System (dl-example/)
-- **Qualitative Evaluation Translator**: Convert human evaluations to mathematical constraints
-- **Polytope Visualizer**: Interactive 2D/3D constraint space visualization
-- **Project Data Integration**: Real Logos/Nimbus/Status ecosystem project data
-- **Mathematical Framework**: Linear constraint generation for robust portfolio selection
+### Visualization Experiment (toy-example/)
+- Self-contained D3.js visualization system
+- Has its own toy-data/ subdirectory with CSV datasets
+- See [toy-example-docs.md](./toy-example-docs.md) for complete details
 
-## Common Workflows
+### Deep Learning Experiment (dl-example/)  
+- Self-contained qualitative evaluation system
+- Uses its own internal project data
+- See [dl-example-docs.md](./dl-example-docs.md) for complete details
 
-### Adding New Interactive Visualizations
-1. Create JavaScript module in `toy-example/js/`
-2. Follow existing D3.js patterns and modular design
-3. Update `portfolio_visualizations.html` with container div
-4. Test with local HTTP server
-
-### Working with Deep Learning Optimization
-1. Define projects and evaluation criteria
-2. Add qualitative evaluations using supported types (comparison, range, ranking, threshold)
-3. Generate constraint matrices for optimization
-4. Create interactive polytope visualizations
-5. Export results in multiple formats
-
-### Data Updates
-- **Visualization data**: Update CSV files in `toy-data/`, run `data_preparation.py`
-- **Optimization data**: Modify project data in `dl-example/logos_nimbus_status_projects.py`
-- **Stakeholder evaluations**: Update `stakeholder_evaluations.json`
-
-## Architecture Overview
+## Repository Structure
 
 ```
 Repository Structure:
-├── toy-data/           # Sample datasets (CSV)
-├── toy-example/        # D3.js visualizations
-│   ├── js/            # Visualization modules
+├── toy-example/        # INDEPENDENT visualization experiment
+│   ├── toy-data/      # CSV datasets for this experiment only
+│   ├── js/            # D3.js visualization modules  
 │   ├── data_preparation.py
 │   └── portfolio_visualizations.html
-├── dl-example/         # Deep learning optimization
+├── dl-example/         # INDEPENDENT deep learning experiment
 │   ├── qualitative_evaluation_translator.py
 │   ├── polytope_visualizer.py
 │   ├── portfolio_optimization_demo.py
-│   └── *.json         # Project and evaluation data
+│   └── *.json         # Self-contained project data
+├── toy-example-docs.md # Documentation for visualization experiment
+├── dl-example-docs.md  # Documentation for deep learning experiment
 └── CLAUDE.md          # This file
 ```
-
-## Integration Points
-
-The two systems can be integrated for complete portfolio management:
-
-1. **Data Flow**: toy-data → toy-example (visualization) + dl-example (optimization)
-2. **Decision Support**: Use dl-example constraints to inform toy-example decision trees
-3. **Stakeholder Input**: Collect evaluations via toy-example interface, process in dl-example
-4. **Results Presentation**: Optimize in dl-example, visualize results in toy-example
 
 ## Important Instructions
 
