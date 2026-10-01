@@ -666,10 +666,33 @@
             });
         }
 
+        /**
+         * Escape a value for safe interpolation into an HTML template literal.
+         *
+         * Project names, ids, statuses and constraint text are user supplied
+         * (form input, localStorage, imported JSON) and are rendered below via
+         * `innerHTML`. Interpolating them raw lets a value such as
+         * `<img src=x onerror=...>` be parsed as markup. Escaping the five
+         * characters that matter for element content and quoted attributes
+         * closes that path. Prefer `textContent` where a whole text node is
+         * being set, since it needs no escaping.
+         */
+        function escapeHtml(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
             notification.className = `alert alert-${type}`;
-            notification.innerHTML = message;
+            notification.innerHTML = escapeHtml(message);
 
             notification.onclick = function() {
                 this.style.display = 'none';
@@ -836,11 +859,11 @@
 
                 projectDiv.innerHTML = `
                     <div class="constraint-text">
-                        <strong>${project.name}</strong><br>
-                        <small style="color: #666;">${project.id}</small>
+                        <strong>${escapeHtml(project.name)}</strong><br>
+                        <small style="color: #666;">${escapeHtml(project.id)}</small>
                     </div>
                     <div class="constraint-actions">
-                        <button class="btn btn-sm btn-secondary project-select-btn" data-project-id="${project.id}">
+                        <button class="btn btn-sm btn-secondary project-select-btn" data-project-id="${escapeHtml(project.id)}">
                             Select
                         </button>
                     </div>
@@ -865,7 +888,7 @@
 
                 constraintDiv.innerHTML = `
                     <div class="constraint-text">
-                        ${constraint.text}
+                        ${escapeHtml(constraint.text)}
                     </div>
                     <div class="constraint-actions">
                         <button class="btn btn-sm btn-danger" onclick="removeConstraint(${constraint.id})">
@@ -1450,9 +1473,9 @@
             tooltip.innerHTML = `
                 <div style="position: fixed; top: 20px; right: 20px; background: white; padding: 15px;
                      border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1001; max-width: 250px;">
-                    <h4 style="margin: 0 0 10px 0; color: #495057;">${project.name}</h4>
-                    <p style="margin: 2px 0; color: #6c757d; font-size: 0.9em;">ID: ${project.id}</p>
-                    <p style="margin: 2px 0; color: #6c757d; font-size: 0.9em;">Status: ${project.status}</p>
+                    <h4 style="margin: 0 0 10px 0; color: #495057;">${escapeHtml(project.name)}</h4>
+                    <p style="margin: 2px 0; color: #6c757d; font-size: 0.9em;">ID: ${escapeHtml(project.id)}</p>
+                    <p style="margin: 2px 0; color: #6c757d; font-size: 0.9em;">Status: ${escapeHtml(project.status)}</p>
                     <hr style="margin: 8px 0; border: none; border-top: 1px solid #dee2e6;">
                     <p style="margin: 2px 0; font-size: 0.9em;">
                         <strong>${xDim}:</strong> ${(project[xField] * 100).toFixed(1)}%
