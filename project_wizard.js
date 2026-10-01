@@ -7,6 +7,32 @@ let evaluations = [];
 let currentEvaluationType = null;
 let constraintData = null;
 
+/**
+ * Escape a value for safe interpolation into an HTML template literal.
+ *
+ * Every value rendered below reaches the DOM through `innerHTML`, and the values
+ * are user supplied: they arrive from form fields, from `localStorage`, and from
+ * exported/imported JSON files that can be shared between users. Interpolating
+ * them raw means a value such as `<img src=x onerror=...>` is parsed as markup,
+ * which is a stored cross-site-scripting vector. Escaping the five characters
+ * that matter for element content and quoted attribute contexts removes it.
+ *
+ * Use this on any interpolated value that is not a literal defined in this file.
+ * `textContent` is preferable where a whole text node is being set, because it
+ * needs no escaping at all.
+ */
+function escapeHtml(value) {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     initializeSliders();
@@ -500,14 +526,14 @@ function showEvaluationForm(type) {
 
 // Helper functions for evaluation forms
 function getProjectOptions() {
-    return projects.map(p => `<option value="${p.project_id}">${p.name}</option>`).join('');
+    return projects.map(p => `<option value="${escapeHtml(p.project_id)}">${escapeHtml(p.name)}</option>`).join('');
 }
 
 function getProjectCheckboxes() {
     return projects.map(p => `
         <div style="margin: 5px 0;">
-            <input type="checkbox" id="rank-${p.project_id}" value="${p.project_id}">
-            <label for="rank-${p.project_id}">${p.name}</label>
+            <input type="checkbox" id="rank-${escapeHtml(p.project_id)}" value="${escapeHtml(p.project_id)}">
+            <label for="rank-${escapeHtml(p.project_id)}">${escapeHtml(p.name)}</label>
         </div>
     `).join('');
 }
@@ -720,11 +746,11 @@ function displayParsedEvaluations(parsedEvaluations) {
     } else {
         container.innerHTML = parsedEvaluations.map(eval => `
             <div class="parsed-evaluation">
-                <strong>${eval.evaluation_type}</strong>: 
-                ${eval.projects.join(' vs ')} 
-                ${eval.operator ? `(${eval.operator})` : ''}
-                ${eval.values ? `[${eval.values.join(', ')}]` : ''}
-                <br><small>Criteria: ${eval.criteria}, Confidence: ${eval.confidence}</small>
+                <strong>${escapeHtml(eval.evaluation_type)}</strong>:
+                ${escapeHtml(eval.projects.join(' vs '))}
+                ${eval.operator ? `(${escapeHtml(eval.operator)})` : ''}
+                ${eval.values ? `[${escapeHtml(eval.values.join(', '))}]` : ''}
+                <br><small>Criteria: ${escapeHtml(eval.criteria)}, Confidence: ${escapeHtml(eval.confidence)}</small>
             </div>
         `).join('');
     }
@@ -744,8 +770,8 @@ function updateEvaluationsList() {
             <div class="evaluation-card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <strong>${eval.evaluation_type}</strong> by ${eval.evaluator_id}
-                        <br><small>${eval.projects.join(' vs ')} - ${eval.criteria}</small>
+                        <strong>${escapeHtml(eval.evaluation_type)}</strong> by ${escapeHtml(eval.evaluator_id)}
+                        <br><small>${escapeHtml(eval.projects.join(' vs '))} - ${escapeHtml(eval.criteria)}</small>
                     </div>
                     <button class="btn btn-danger" onclick="removeEvaluation(${index})" style="padding: 5px 10px; font-size: 0.9em;">
                         🗑️ Remove
@@ -774,11 +800,11 @@ function loadProjectsForEvaluation() {
             <div class="project-list">
                 ${projects.map(project => `
                     <div class="project-card">
-                        <h4>${project.name}</h4>
-                        <p><strong>ID:</strong> ${project.project_id}</p>
-                        <p><strong>Status:</strong> ${project.status}</p>
-                        <p><strong>Priority:</strong> ${project.strategic_priority}</p>
-                        <p>${project.description}</p>
+                        <h4>${escapeHtml(project.name)}</h4>
+                        <p><strong>ID:</strong> ${escapeHtml(project.project_id)}</p>
+                        <p><strong>Status:</strong> ${escapeHtml(project.status)}</p>
+                        <p><strong>Priority:</strong> ${escapeHtml(project.strategic_priority)}</p>
+                        <p>${escapeHtml(project.description)}</p>
                     </div>
                 `).join('')}
             </div>
@@ -888,9 +914,9 @@ function displayConstraintAnalysis(constraints) {
                 <div id="constraints-list">
                     ${constraints.inequalities.map((constraint, index) => `
                         <div class="evaluation-card">
-                            <strong>${constraint.type.toUpperCase()}</strong> - ${constraint.criteria}
-                            <br><small>By: ${constraint.evaluator}</small>
-                            <br><small>Details: ${JSON.stringify(constraint, null, 2)}</small>
+                            <strong>${escapeHtml(constraint.type.toUpperCase())}</strong> - ${escapeHtml(constraint.criteria)}
+                            <br><small>By: ${escapeHtml(constraint.evaluator)}</small>
+                            <br><small>Details: ${escapeHtml(JSON.stringify(constraint, null, 2))}</small>
                         </div>
                     `).join('')}
                 </div>
@@ -941,7 +967,7 @@ function validateConstraints(constraints) {
     if (issues.length === 0) {
         return '<div style="color: #28a745;">✅ No constraint conflicts detected</div>';
     } else {
-        return issues.map(issue => `<div style="color: #dc3545;">❌ ${issue}</div>`).join('');
+        return issues.map(issue => `<div style="color: #dc3545;">❌ ${escapeHtml(issue)}</div>`).join('');
     }
 }
 
@@ -976,10 +1002,10 @@ function prepareExportData() {
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <strong>Evaluators:</strong> ${exportData.summary.evaluators.join(', ')}
+                    <strong>Evaluators:</strong> ${escapeHtml(exportData.summary.evaluators.join(', '))}
                 </div>
                 <div class="form-group">
-                    <strong>Criteria:</strong> ${exportData.summary.criteria.join(', ')}
+                    <strong>Criteria:</strong> ${escapeHtml(exportData.summary.criteria.join(', '))}
                 </div>
             </div>
             
